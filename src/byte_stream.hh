@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <queue>
 
 class Reader;
 class Writer;
@@ -25,6 +26,18 @@ protected:
   // Please add any additional state to the ByteStream here, and not to the Writer and Reader interfaces.
   uint64_t capacity_;
   bool error_ {};
+
+  // Use a queue to store data blocks
+  std::queue<std::string> buffer_ {};
+  // Record the total number of bytes in the current buffer
+  uint64_t buffer_size_ = 0;
+  // Count the total bytes written and read
+  uint64_t total_pushed_ = 0;
+  uint64_t total_popped_ = 0;
+  // Mark as closed
+  bool closed_ = false;
+  // Record how many bytes of the queue head string have been read
+  uint64_t buffer_view_offset_ = 0;
 };
 
 class Writer : public ByteStream
