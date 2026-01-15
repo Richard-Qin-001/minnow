@@ -51,4 +51,5 @@ private:
   // End of stream
   bool has_last_substring_ = false;
   uint64_t eof_index = 0;
+  void flush();
 };
