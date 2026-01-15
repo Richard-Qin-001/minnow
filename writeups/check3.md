@@ -1,7 +1,7 @@
 Checkpoint 3 Writeup
 ====================
 
-My name: [your name here]
+My name: [Richard Qin]
 
 My SUNet ID: [your sunetid here]
 
@@ -9,18 +9,18 @@ I collaborated with: [list sunetids here]
 
 I would like to thank/reward these classmates for their help: [list sunetids here]
 
-This checkpoint took me about [n] hours to do. I [did/did not] attend the lab session.
+This checkpoint took me about [4] hours to do. I [did not] attend the lab session.
 
-Program Structure and Design of the TCPSender [Describe data
-structures and approach taken. Describe alternative designs considered
-or tested.  Describe benefits and weaknesses of your design compared
-with alternatives -- perhaps in terms of simplicity/complexity, risk
-of bugs, asymptotic performance, empirical performance, required
-implementation time and difficulty, and other factors. Include any
-measurements if applicable.]: []
+Program Structure and Design of the TCPSender [
+* Data Structure: std::deque was chosen to manage outstanding_segments because it supports efficient removal from the front (ACK) and access at the front (retransmission).
+* Adopts the design of a separate RetransmissionTimer class, This 'separation of mechanism and strategy' design makes the `tick` function clearer and simplifies state management.
+]
 
 Implementation Challenges:
-[]
+[
+* Zero Window Probe
+* Conditions for RTO Doubling (No Doubling During Zero Window)
+]
 
 Remaining Bugs:
 []

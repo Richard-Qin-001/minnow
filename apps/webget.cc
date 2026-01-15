@@ -1,5 +1,5 @@
 #include "debug.hh"
-#include "socket.hh"
+#include "tcp_minnow_socket.hh"
 
 #include <cstdlib>
 #include <iostream>
@@ -11,7 +11,7 @@ using namespace std;
 namespace {
 void get_URL( const string& host, const string& path )
 {
-  TCPSocket tcp_socket;
+  CS144TCPSocket tcp_socket;
   Address addr = Address( host, "http" );
   tcp_socket.connect( addr );
   string request = "";
@@ -26,8 +26,9 @@ void get_URL( const string& host, const string& path )
     buff = "";
   }
 
-  debug( "Function called: get_URL( \"{}\", \"{}\" )", host, path );
-  debug( "get_URL() function not yet implemented" );
+  tcp_socket.wait_until_closed();
+  // debug( "Function called: get_URL( \"{}\", \"{}\" )", host, path );
+  // debug( "get_URL() function not yet implemented" );
 }
 } // namespace
 
