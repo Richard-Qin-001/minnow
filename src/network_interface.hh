@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <queue>
+#include <unordered_map>
 
 // A "network interface" that connects IP (the internet layer, or network layer)
 // with Ethernet (the network access layer, or link layer).
@@ -49,7 +50,7 @@ public:
   // Sends an Internet datagram, encapsulated in an Ethernet frame (if it knows the Ethernet destination
   // address). Will need to use [ARP](\ref rfc::rfc826) to look up the Ethernet destination address for the next
   // hop. Sending is accomplished by calling `transmit()` (a member variable) on the frame.
-  void send_datagram( InternetDatagram dgram, const Address& next_hop );
+  void send_datagram( const InternetDatagram& dgram, const Address& next_hop );
 
   // Receives an Ethernet frame and responds appropriately.
   // If type is IPv4, pushes the datagram to the datagrams_in queue.
@@ -82,4 +83,22 @@ private:
 
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
+
+  // ARP entry structure
+  struct ArpEntry
+  {
+    EthernetAddress mac;
+    size_t expiration_time; // Absolute Expiration Time (ms)
+  };
+  // ARP cache table
+  std::unordered_map<uint32_t, ArpEntry> arp_table_ {};
+  // wait queue
+  std::unordered_map<uint32_t, std::vector<InternetDatagram>> waiting_datagrams_ {};
+  // ARP Request Cooldown Table
+  std::unordered_map<uint32_t, size_t> arp_request_timestamps_ {};
+  // Global clock
+  size_t current_time_ { 0 };
+
+  static constexpr size_t ARP_ENTRY_TTL_MS = ( 30 * 1000 ); // Mapping valid for 30 seconds
+  static constexpr size_t ARP_REQUEST_TIMEOUT_MS = ( 5 * 1000 ); // Request interval 5 seconds
 };
