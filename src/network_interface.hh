@@ -99,6 +99,6 @@ private:
   // Global clock
   size_t current_time_ { 0 };
 
-  static constexpr size_t ARP_ENTRY_TTL_MS = ( 30 * 1000 ); // Mapping valid for 30 seconds
-  static constexpr size_t ARP_REQUEST_TIMEOUT_MS = ( 5 * 1000 ); // Request interval 5 seconds
+  static constexpr size_t ARP_ENTRY_TTL_MS = ( 30000 );      // Mapping valid for 30 seconds (30 * 1000)
+  static constexpr size_t ARP_REQUEST_TIMEOUT_MS = ( 5000 ); // Request interval 5 seconds (5 * 1000)
 };
