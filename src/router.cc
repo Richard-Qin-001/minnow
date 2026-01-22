@@ -21,7 +21,15 @@ void Router::add_route( const uint32_t route_prefix,
        << " on interface " << interface_num << "\n";
 
   // debug( "unimplemented add_route() called" );
-  routing_table_.push_back( { route_prefix, prefix_length, next_hop, interface_num } );
+  TrieNode* curr = root_.get();
+  for ( uint8_t i = 0; i < prefix_length; ++i ) {
+    const uint8_t bit = ( route_prefix >> ( 31 - i ) ) & 1;
+    if ( !curr->children.at( bit ) ) {
+      curr->children.at( bit ) = std::make_unique<TrieNode>();
+    }
+    curr = curr->children.at( bit ).get();
+  }
+  curr->entry = { route_prefix, prefix_length, next_hop, interface_num };
 }
 
 // Go through all the interfaces, and route every incoming datagram to its proper outgoing interface.
@@ -50,16 +58,19 @@ void Router::route()
 std::optional<Router::RouteEntry> Router::match_longest_prefix( uint32_t target_ip ) const
 {
   std::optional<RouteEntry> best_match;
-  uint8_t max_len = 0;
+  TrieNode* curr = root_.get();
 
-  for ( const auto& rule : routing_table_ ) {
-    const uint32_t mask = ( rule.prefix_length == 0 ) ? 0 : ( 0xFFFFFFFF << ( 32 - rule.prefix_length ) );
-
-    if ( ( target_ip & mask ) == ( rule.route_prefix & mask ) ) {
-      if ( !best_match.has_value() || rule.prefix_length > max_len ) {
-        max_len = rule.prefix_length;
-        best_match = rule;
-      }
+  if ( curr->entry.has_value() ) {
+    best_match = curr->entry;
+  }
+  for ( uint8_t i = 0; i < 32; ++i ) {
+    const uint8_t bit = ( target_ip >> ( 31 - i ) ) & 1;
+    if ( !curr->children.at( bit ) ) {
+      break;
+    }
+    curr = curr->children.at( bit ).get();
+    if ( curr->entry.has_value() ) {
+      best_match = curr->entry;
     }
   }
   return best_match;

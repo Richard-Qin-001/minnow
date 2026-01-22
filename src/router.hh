@@ -42,6 +42,11 @@ private:
     std::optional<Address> next_hop;
     size_t interface_num;
   };
-  std::vector<RouteEntry> routing_table_ {};
+  struct TrieNode
+  {
+    std::array<std::unique_ptr<TrieNode>, 2> children {};
+    std::optional<RouteEntry> entry {};
+  };
+  std::unique_ptr<TrieNode> root_ { std::make_unique<TrieNode>() };
   std::optional<RouteEntry> match_longest_prefix( uint32_t target_ip ) const;
 };

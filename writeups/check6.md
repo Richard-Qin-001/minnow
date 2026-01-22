@@ -19,38 +19,41 @@ of bugs, asymptotic performance, empirical performance, required
 implementation time and difficulty, and other factors. Include any
 measurements if applicable.]:
 ----------------------------
-My router implementation uses a simple `std::vector` to store the routing table.
-Each `RouteEntry` struct holds the route prefix, prefix length, optional next
-hop, and the output interface index. While a Trie structure would be more
-efficient for large-scale routing, a linear scan (O(N)) is sufficient and
-performant enough for this lab's constraints.
+To optimize the routing lookup performance from O(N) to O(1) (specifically O(32)),
+I implemented a Trie (Prefix Tree) data structure instead of a simple linear
+list.
 
-To handle the "Longest Prefix Match" (LPM) logic and keep the code clean, I
-abstracted the matching process into a private helper function,
-`match_longest_prefix`. This function iterates through the routing table,
-calculates the bitmask for each entry, and returns the matching rule with the
-greatest prefix length. The main `route()` method handles the high-level logic:
-polling interfaces, checking TTL, updating the checksum, and forwarding the
-datagram.
+The router maintains a `root_` pointer to a `TrieNode`. Each `TrieNode` contains
+an array of two `std::unique_ptr`s (representing bit 0 and bit 1) and an
+`std::optional<RouteEntry>`. The `RouteEntry` is stored directly in the node
+corresponding to the end of a prefix.
+
+- **Insertion (`add_route`)**: Traverses the tree based on the bits of the
+  route prefix, creating new nodes as necessary using `std::make_unique`.
+- **Lookup (`match_longest_prefix`)**: Traverses the tree using the destination
+  IP's bits. It keeps track of the most recently seen valid `RouteEntry` as it
+  descends. This naturally implements "Longest Prefix Match" logic without
+  needing manual length comparisons or sorting.
 
 
 Implementation Challenges:
 -------------------------
-The most tricky part was calculating the bitmask for the default route (/0).
-Shifting a 32-bit integer by 32 bits is undefined behavior in C++, which caused
-my mask calculation logic (`0xFFFFFFFF << (32 - len)`) to fail for the default
-route. I resolved this by adding a specific check for `prefix_length == 0`.
+Transitioning to a Trie structure introduced a strict compiler warning regarding
+uninitialized members (`-Weffc++`). The compiler flagged that `std::array` and
+`std::optional` in my `TrieNode` struct were not explicitly initialized, even
+though they have default constructors. I resolved this by using default member
+initializers (e.g., `children {}`), ensuring all members are zero-initialized.
 
-Another challenge was "bad IPv4 datagram" errors. I initially forgot that
-modifying the TTL field invalidates the IP header's checksum. I fixed this by
-calling `compute_checksum()` immediately after decrementing the TTL. Finally, I
-encountered a `cognitive complexity` error from the linter due to deep nesting;
-extracting the matching logic into a helper function solved this neatly.
+Another challenge was correctly implementing the bitwise traversal. I had to
+ensure I was extracting the bits from MSB to LSB (`(ip >> (31-i)) & 1`). Using
+a Trie also elegantly solved the "undefined behavior" issue regarding bitwise
+shifts (shifting by 32) that I encountered in the linear scan approach, as the
+Trie logic relies on bit indexing rather than masking.
 
 Remaining Bugs:
 --------------
-No known bugs. The router successfully handles direct delivery, next-hop
-forwarding, and default routes. It passes all automated tests and linter checks.
+No known bugs. The Trie implementation correctly handles all edge cases,
+including default routes (/0) and nested subnets, and passes all tests.
 
 - If applicable: I received help from a former student in this class,
   another expert, or a chatbot or other AI system (e.g. ChatGPT,
