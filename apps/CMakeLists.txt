@@ -26,3 +26,5 @@ add_app(tcp_ipv4)
 add_app(ip_raw)
 add_app(tcp_eth_udp)
 add_app(fun_router)
+
+add_app(chat chat.cc)
